@@ -348,36 +348,8 @@ runs:
         # get some things for cert opts
         $file = "${{ steps.code-sign-action-internal.outputs.file }}"
         $cert_secure_password = $null
-        
-        # Find signtool.exe using Windows equivalent of 'which'
-        $signtool = (Get-Command "signtool.exe" -ErrorAction SilentlyContinue).Source
-        if (-not $signtool) {
-            # Fallback to common installation paths
-            # See https://github.com/actions/runner-images/issues/11228#issuecomment-3049594823
-            $possiblePaths = @(
-                "${env:ProgramFiles(x86)}\Windows Kits\10\bin\10.0.26100.0\signtool.exe",
-                "${env:ProgramFiles(x86)}\Windows Kits\10\bin\10.0.17134.0\signtool.exe",
-                "${env:ProgramFiles(x86)}\Windows Kits\10\bin\10.0.16299.0\signtool.exe",
-                "${env:ProgramFiles(x86)}\Windows Kits\10\bin\10.0.15063.0\signtool.exe",
-                "${env:ProgramFiles(x86)}\Windows Kits\10\bin\10.0.14393.0\signtool.exe",
-                "${env:ProgramFiles(x86)}\Windows Kits\10\bin\arm\signtool.exe",
-                "${env:ProgramFiles(x86)}\Windows Kits\10\bin\arm64\signtool.exe",
-                "${env:ProgramFiles(x86)}\Windows Kits\10\bin\x64\signtool.exe",
-                "${env:ProgramFiles(x86)}\Windows Kits\10\bin\x86\signtool.exe"
-            )
-            foreach ($path in $possiblePaths) {
-                if (Test-Path $path) {
-                    $signtool = $path
-                    break
-                }
-            }
-        }
-        
-        if (-not $signtool) {
-            throw "signtool.exe not found. Please ensure Windows SDK is installed."
-        }
-        
-        Write-Output "Using signtool: $signtool"
+        $signtool = "${env:ProgramFiles(x86)}\Windows Kits\10\bin\x64\signtool.exe"
+        $signtool2022 = "${env:ProgramFiles(x86)}\Windows Kits\10\bin\10.0.17763.0\x86\signtool.exe"
 
         # throw error if file does not exist
         if (!(Test-Path "${{ steps.code-sign-action-internal.outputs.file }}"))
@@ -386,9 +358,9 @@ runs:
         }
 
         # use more recent signtool if we can
-        # If (Test-Path $signtool2022) {
-        #   $signtool = "$signtool2022"
-        # }
+        If (Test-Path $signtool2022) {
+          $signtool = "$signtool2022"
+        }
         echo "::endgroup::"
 
         # verify the cert and password are good
