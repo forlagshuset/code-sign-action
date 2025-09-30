@@ -348,9 +348,31 @@ runs:
         # get some things for cert opts
         $file = "${{ steps.code-sign-action-internal.outputs.file }}"
         $cert_secure_password = $null
-        $signtool = "signtool.exe"
-        # $signtool = "${env:ProgramFiles(x86)}\Windows Kits\10\bin\x64\signtool.exe"
-        # $signtool2022 = "${env:ProgramFiles(x86)}\Windows Kits\10\bin\10.0.17763.0\x86\signtool.exe"
+        
+        # Find signtool.exe using Windows equivalent of 'which'
+        $signtool = (Get-Command "signtool.exe" -ErrorAction SilentlyContinue).Source
+        if (-not $signtool) {
+            # Fallback to common installation paths
+            $possiblePaths = @(
+                "${env:ProgramFiles(x86)}\Windows Kits\10\bin\x64\signtool.exe",
+                "${env:ProgramFiles(x86)}\Windows Kits\10\bin\10.0.17763.0\x86\signtool.exe",
+                "${env:ProgramFiles}\Windows Kits\10\bin\x64\signtool.exe",
+                "${env:ProgramFiles(x86)}\Windows Kits\10\bin\10.0.19041.0\x64\signtool.exe",
+                "${env:ProgramFiles(x86)}\Windows Kits\10\bin\10.0.22000.0\x64\signtool.exe"
+            )
+            foreach ($path in $possiblePaths) {
+                if (Test-Path $path) {
+                    $signtool = $path
+                    break
+                }
+            }
+        }
+        
+        if (-not $signtool) {
+            throw "signtool.exe not found. Please ensure Windows SDK is installed."
+        }
+        
+        Write-Output "Using signtool: $signtool"
 
         # throw error if file does not exist
         if (!(Test-Path "${{ steps.code-sign-action-internal.outputs.file }}"))
