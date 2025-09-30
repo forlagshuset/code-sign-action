@@ -1,5 +1,5 @@
 {
-  "name": "@word2book/code-sign-action",
+  "name": "@forlagshuset/code-sign-action",
   "description": "A GitHub Action for code signing files",
   "version": "3.0.0",
   "author": "Mike Pirog @pirog",
